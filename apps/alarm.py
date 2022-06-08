@@ -46,6 +46,7 @@ class AlarmSystem(hass.Hass):
         self.__notify_title = self.args.get(
             "notify_title", "AlarmSystem triggered, possible {}")
         self.__telegram_user_ids = self.args.get("telegram_user_ids",[])
+        self.__notify_recipients = self.args.get("notify_recipients", [])
         self.__alexa_media_devices = self.args.get("alexa_media_devices",[])
         self.__alexa_monkeys = self.args.get("alexa_monkeys",[])
         # cameras
@@ -92,10 +93,10 @@ class AlarmSystem(hass.Hass):
                 "alarm_system_armed_vacation": "Achtung Alarmanlage im Modus Urlaub ist scharf geschaltet"
             },
             "english" : {
-                "intruder_alert": "Attention intruder alarm, sensor {} has triggered",
-                "fire_alert": "Attention Attention Attention fire alarm, sensor {} has triggered",
-                "fire_temperature_alert": "Attention fire alarm, sensor {} has reached a critical temperature of {} degrees",
-                "water_leak_alert": "Attention water leak, Sensor {} was triggered",
+                "intruder_alert": "\U0001F46E intruder alarm, sensor {} has triggered",
+                "fire_alert": "\U0001F525 fire alarm, sensor {} has triggered",
+                "fire_temperature_alert": "\U0001F525 sensor {} has reached a critical temperature of {} degrees",
+                "water_leak_alert": "\U0001F30A water leak, Sensor {} was triggered",
                 "system_start": "Homeassistant System started",
                 "button_disarm": "Attention, switch {} pressed, alarm system will be deactived",
                 "button_arm_home": "Attention, switch {} pressed, alarm system will be activated in mode home",
@@ -331,6 +332,13 @@ class AlarmSystem(hass.Hass):
             self.notify_alexa(msg, title)
 
         self.notify_telegram(msg)
+        self.notifies(msg)
+
+    def notifies(self, msg):
+        for recipients in self.__notify_recipients:
+            self.log("Notify Service {} with message {}".format(recipients, msg))
+            self.call_service("notify/{}".format(recipients),
+                                message=msg)
 
     def notify_telegram(self, msg):
         for user_id in self.__telegram_user_ids:
@@ -929,4 +937,3 @@ class AlarmSystem(hass.Hass):
 
         self.call_service("alarm_control_panel/alarm_disarm",
                           entity_id=self.__alarm_control_panel, code=self.__alarm_pin)
-
